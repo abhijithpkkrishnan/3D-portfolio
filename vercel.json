@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "npx vite build",
+  "buildCommand": "node node_modules/vite/bin/vite.js build",
   "outputDirectory": "dist",
   "rewrites": [
     { "source": "/assets/:path*", "destination": "/assets/:path*" },
