@@ -69,16 +69,17 @@ const Hero = () => {
           
           <motion.h1
             variants={itemVariants}
-            className="text-5xl md:text-7xl lg:text-8xl font-display font-bold mb-6"
+            className="text-5xl md:text-7xl lg:text-8xl font-display font-bold mb-6 break-words"
           >
-            <GlitchText text="ABHIJITH" className="glow-text" />
-            {' '}
-            <span className="text-secondary glow-text-secondary">P K</span>
+            <span className="inline-flex flex-wrap justify-center gap-x-[0.25em] gap-y-0 items-baseline">
+              <GlitchText text="ABHIJITH" className="glow-text" />
+              <span className="text-secondary glow-text-secondary whitespace-nowrap">P{"\u00A0"}K</span>
+            </span>
           </motion.h1>
           
           <motion.p
             variants={itemVariants}
-            className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8 font-body"
+            className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8 font-body px-1 min-w-0"
           >
             Crafting digital experiences with{' '}
             <motion.span 
