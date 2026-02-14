@@ -57,7 +57,7 @@ const Experience = () => {
   const lineHeight = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
 
   return (
-    <section ref={containerRef} id="experience" className="min-h-screen py-20 px-4 relative overflow-hidden">
+    <section ref={containerRef} id="experience" className="min-h-screen py-20 px-4 relative overflow-hidden scroll-section">
       <div className="max-w-6xl mx-auto">
         <motion.div
           className="text-center mb-16"

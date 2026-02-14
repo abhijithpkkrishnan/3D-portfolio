@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import InteractiveScene from '@/components/3d/InteractiveScene';
 import Navigation from '@/components/Navigation';
 import Hero from '@/components/sections/Hero';
@@ -12,24 +12,42 @@ import ScrollProgress from '@/components/effects/ScrollProgress';
 import GameUI from '@/components/effects/GameUI';
 import LoadingScreen from '@/components/effects/LoadingScreen';
 
+const SECTIONS = ['hero', 'skills', 'experience', 'projects', 'contact'] as const;
+
 const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [activeSection, setActiveSection] = useState('hero');
+  const activeSectionRef = useRef('hero');
+  const rafRef = useRef<number | null>(null);
 
   useEffect(() => {
-    const handleScroll = () => {
-      const sections = ['hero', 'skills', 'experience', 'projects', 'contact'];
-      for (const section of sections.reverse()) {
-        const element = document.getElementById(section);
-        if (element && window.scrollY >= element.offsetTop - 300) {
-          setActiveSection(section);
+    const updateSection = () => {
+      let next: string | null = null;
+      for (const section of [...SECTIONS].reverse()) {
+        const el = document.getElementById(section);
+        if (el && window.scrollY >= el.offsetTop - 300) {
+          next = section;
           break;
         }
       }
+      if (next != null && next !== activeSectionRef.current) {
+        activeSectionRef.current = next;
+        setActiveSection(next);
+      }
+      rafRef.current = null;
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    const handleScroll = () => {
+      if (rafRef.current === null) {
+        rafRef.current = requestAnimationFrame(updateSection);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+    };
   }, []);
 
   return (

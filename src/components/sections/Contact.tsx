@@ -95,7 +95,7 @@ const Contact = () => {
   };
 
   return (
-    <section id="contact" className="min-h-screen py-20 px-4 relative overflow-hidden">
+    <section id="contact" className="min-h-screen py-20 px-4 relative overflow-hidden scroll-section">
       <div className="max-w-6xl mx-auto">
         <motion.div
           className="text-center mb-16"

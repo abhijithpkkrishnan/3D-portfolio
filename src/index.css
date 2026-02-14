@@ -61,6 +61,10 @@
     @apply border-border;
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-background text-foreground font-body antialiased;
     overflow-x: hidden;
@@ -142,5 +146,17 @@
     height: 2px;
     background: linear-gradient(90deg, transparent, hsl(180 100% 50% / 0.3), transparent);
     animation: scanline 8s linear infinite;
+  }
+
+  /* Scroll and animation performance: GPU layer, reduce repaints */
+  .gpu-accelerated {
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+
+  .scroll-section {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 80vh;
   }
 }

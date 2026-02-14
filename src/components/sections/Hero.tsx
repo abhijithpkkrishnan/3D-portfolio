@@ -26,7 +26,7 @@ const Hero = () => {
       opacity: 1,
       transition: {
         staggerChildren: 0.1,
-        delayChildren: 0.3,
+        delayChildren: 0,
       }
     }
   };
@@ -40,10 +40,16 @@ const Hero = () => {
     }
   };
 
+  // Name is visible immediately (no delay) so it appears first when the page loads
+  const nameVariants = {
+    hidden: { opacity: 1, y: 0 },
+    visible: { opacity: 1, y: 0 },
+  };
+
   return (
     <section ref={containerRef} id="hero" className="min-h-screen flex items-center justify-center relative px-4 overflow-hidden">
       <motion.div 
-        className="text-center z-10"
+        className="text-center z-10 gpu-accelerated"
         style={{ y, opacity, scale }}
       >
         <motion.div
@@ -68,7 +74,8 @@ const Hero = () => {
           </motion.h2>
           
           <motion.h1
-            variants={itemVariants}
+            variants={nameVariants}
+            initial="visible"
             className="text-5xl md:text-7xl lg:text-8xl font-display font-bold mb-6 break-words"
           >
             <span className="inline-flex flex-wrap justify-center gap-x-[0.25em] gap-y-0 items-baseline">
