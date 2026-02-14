@@ -95,7 +95,7 @@ const ProjectCard = ({ project, index, isSelected, onSelect }: {
   return (
     <motion.div
       ref={ref}
-      className="glass-card p-6 cursor-pointer relative overflow-hidden group"
+      className="glass-card p-6 sm:p-8 cursor-pointer relative overflow-hidden group"
       initial={{ opacity: 0, y: 50 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
@@ -141,7 +141,7 @@ const ProjectCard = ({ project, index, isSelected, onSelect }: {
 
       <div className="relative z-10">
         <motion.div 
-          className="text-5xl mb-4"
+          className="text-5xl sm:text-6xl mb-4"
           animate={isSelected ? { 
             scale: [1, 1.2, 1],
             rotate: [0, 10, -10, 0],
@@ -151,8 +151,8 @@ const ProjectCard = ({ project, index, isSelected, onSelect }: {
           {project.emoji}
         </motion.div>
         
-        <h4 className="text-lg font-display font-bold mb-1">{project.title}</h4>
-        <p className="text-sm mb-3" style={{ color: project.color }}>{project.subtitle}</p>
+        <h4 className="text-lg sm:text-xl font-display font-bold mb-1">{project.title}</h4>
+        <p className="text-sm sm:text-base mb-3" style={{ color: project.color }}>{project.subtitle}</p>
         <p className="text-sm text-muted-foreground line-clamp-2">{project.description}</p>
         
         <div className="flex flex-wrap gap-2 mt-4">
@@ -174,8 +174,22 @@ const ProjectCard = ({ project, index, isSelected, onSelect }: {
   );
 };
 
+const PROJECT_DETAIL_ID = 'project-detail-section';
+
 const Projects = () => {
   const [selectedProject, setSelectedProject] = useState<number | null>(null);
+  const detailRef = useRef<HTMLDivElement>(null);
+
+  const handleProjectSelect = (index: number) => {
+    const next = selectedProject === index ? null : index;
+    setSelectedProject(next);
+    if (next !== null) {
+      // Scroll to detail section after it mounts
+      setTimeout(() => {
+        detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 150);
+    }
+  };
 
   return (
     <section id="projects" className="min-h-screen py-20 px-4 relative overflow-hidden scroll-section">
@@ -224,7 +238,7 @@ const Projects = () => {
         >
           <ProjectPortal 
             projects={projects.map(p => ({ title: p.title, color: p.color, emoji: p.emoji }))}
-            onProjectClick={setSelectedProject}
+            onProjectClick={handleProjectSelect}
           />
           <p className="text-center text-sm text-muted-foreground font-display mt-4">
             <motion.span
@@ -237,15 +251,15 @@ const Projects = () => {
           </p>
         </motion.div>
 
-        {/* Project Grid */}
-        <div className="grid md:grid-cols-2 gap-6">
+        {/* Project Grid: one card per row on mobile, two columns only on large screens */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 sm:gap-6 w-full min-w-0">
           {projects.map((project, index) => (
             <ProjectCard
               key={project.title}
               project={project}
               index={index}
               isSelected={selectedProject === index}
-              onSelect={() => setSelectedProject(selectedProject === index ? null : index)}
+              onSelect={() => handleProjectSelect(index)}
             />
           ))}
         </div>
@@ -253,6 +267,8 @@ const Projects = () => {
         {/* Selected Project Details */}
         {selectedProject !== null && (
           <motion.div
+            ref={detailRef}
+            id={PROJECT_DETAIL_ID}
             className="mt-8 glass-card p-8 glow-border"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

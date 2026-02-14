@@ -1,7 +1,25 @@
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Suspense, useRef, useState } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { Suspense, useRef, useState, useEffect } from 'react';
 import { Text, RoundedBox, Float } from '@react-three/drei';
 import * as THREE from 'three';
+
+const MOBILE_BREAKPOINT = 768;
+// Spread so scaled cards don’t overlap; card base ~3.4×2.3, desktop scale 1.25
+const POSITIONS_DESKTOP: [number, number, number][] = [
+  [-2.8, 1.2, 0],
+  [2.8, 1.2, 0],
+  [-2.8, -1.8, 0],
+  [2.8, -1.8, 0],
+];
+// More space between cards; spread fits in viewport with wider FOV so all 4 cards visible
+const POSITIONS_MOBILE: [number, number, number][] = [
+  [0, 3.2, 0],
+  [0, 0.4, 0],
+  [0, -2.4, 0],
+  [0, -5.2, 0],
+];
+const MOBILE_CARD_SCALE = 1.18;
+const DESKTOP_CARD_SCALE = 1.25;
 
 interface ProjectCardProps {
   title: string;
@@ -10,9 +28,10 @@ interface ProjectCardProps {
   emoji: string;
   onClick?: () => void;
   index: number;
+  cardScale?: number;
 }
 
-const ProjectCard3D = ({ title, position, color, emoji, onClick, index }: ProjectCardProps) => {
+const ProjectCard3D = ({ title, position, color, emoji, onClick, index, cardScale = 1 }: ProjectCardProps) => {
   const groupRef = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
 
@@ -24,10 +43,10 @@ const ProjectCard3D = ({ title, position, color, emoji, onClick, index }: Projec
       // Rotation on hover
       if (hovered) {
         groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, Math.PI * 0.1, 0.1);
-        groupRef.current.scale.lerp(new THREE.Vector3(1.1, 1.1, 1.1), 0.1);
+        groupRef.current.scale.lerp(new THREE.Vector3(1.1 * cardScale, 1.1 * cardScale, 1.1 * cardScale), 0.1);
       } else {
         groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, 0, 0.1);
-        groupRef.current.scale.lerp(new THREE.Vector3(1, 1, 1), 0.1);
+        groupRef.current.scale.lerp(new THREE.Vector3(cardScale, cardScale, cardScale), 0.1);
       }
     }
   });
@@ -37,12 +56,13 @@ const ProjectCard3D = ({ title, position, color, emoji, onClick, index }: Projec
       <group
         ref={groupRef}
         position={position}
+        scale={[cardScale, cardScale, cardScale]}
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
         onClick={onClick}
       >
         {/* Card background */}
-        <RoundedBox args={[3, 2, 0.2]} radius={0.1} smoothness={4}>
+        <RoundedBox args={[3.4, 2.3, 0.2]} radius={0.12} smoothness={4}>
           <meshStandardMaterial
             color="#0a0a0f"
             metalness={0.5}
@@ -53,7 +73,7 @@ const ProjectCard3D = ({ title, position, color, emoji, onClick, index }: Projec
         </RoundedBox>
 
         {/* Glowing border */}
-        <RoundedBox args={[3.1, 2.1, 0.1]} radius={0.1} smoothness={4}>
+        <RoundedBox args={[3.5, 2.4, 0.1]} radius={0.12} smoothness={4}>
           <meshStandardMaterial
             color={color}
             emissive={color}
@@ -66,8 +86,8 @@ const ProjectCard3D = ({ title, position, color, emoji, onClick, index }: Projec
 
         {/* Emoji */}
         <Text
-          position={[0, 0.3, 0.15]}
-          fontSize={0.5}
+          position={[0, 0.35, 0.15]}
+          fontSize={0.6}
           anchorX="center"
           anchorY="middle"
         >
@@ -76,12 +96,12 @@ const ProjectCard3D = ({ title, position, color, emoji, onClick, index }: Projec
 
         {/* Title */}
         <Text
-          position={[0, -0.4, 0.15]}
-          fontSize={0.2}
+          position={[0, -0.45, 0.15]}
+          fontSize={0.24}
           color={color}
           anchorX="center"
           anchorY="middle"
-          maxWidth={2.5}
+          maxWidth={2.8}
           textAlign="center"
         >
           {title}
@@ -113,9 +133,11 @@ const ProjectCard3D = ({ title, position, color, emoji, onClick, index }: Projec
 interface ProjectPortalProps {
   projects: { title: string; color: string; emoji: string }[];
   onProjectClick?: (index: number) => void;
+  positions: [number, number, number][];
+  cardScale?: number;
 }
 
-const ProjectPortalContent = ({ projects, onProjectClick }: ProjectPortalProps) => {
+const ProjectPortalContent = ({ projects, onProjectClick, positions, cardScale = 1 }: ProjectPortalProps) => {
   const groupRef = useRef<THREE.Group>(null);
 
   useFrame((state) => {
@@ -123,13 +145,6 @@ const ProjectPortalContent = ({ projects, onProjectClick }: ProjectPortalProps) 
       groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.1) * 0.1;
     }
   });
-
-  const positions: [number, number, number][] = [
-    [-2, 1, 0],
-    [2, 1, 0],
-    [-2, -1.5, 0],
-    [2, -1.5, 0],
-  ];
 
   return (
     <>
@@ -148,6 +163,7 @@ const ProjectPortalContent = ({ projects, onProjectClick }: ProjectPortalProps) 
             emoji={project.emoji}
             onClick={() => onProjectClick?.(i)}
             index={i}
+            cardScale={cardScale}
           />
         ))}
       </group>
@@ -155,12 +171,37 @@ const ProjectPortalContent = ({ projects, onProjectClick }: ProjectPortalProps) 
   );
 };
 
-const ProjectPortal = ({ projects, onProjectClick }: ProjectPortalProps) => {
+const ProjectPortal = ({ projects, onProjectClick }: Omit<ProjectPortalProps, 'positions'>) => {
+  const [positions, setPositions] = useState<[number, number, number][]>(() =>
+    typeof window !== 'undefined' && window.innerWidth < MOBILE_BREAKPOINT
+      ? POSITIONS_MOBILE
+      : POSITIONS_DESKTOP
+  );
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== 'undefined' && window.innerWidth < MOBILE_BREAKPOINT
+  );
+
+  useEffect(() => {
+    const update = () => {
+      const mobile = window.innerWidth < MOBILE_BREAKPOINT;
+      setPositions(mobile ? POSITIONS_MOBILE : POSITIONS_DESKTOP);
+      setIsMobile(mobile);
+    };
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+
   return (
-    <div className="w-full h-[500px]">
-      <Canvas camera={{ position: [0, 0, 8], fov: 50 }}>
+    <div className="w-full h-[640px] sm:h-[500px] min-w-0 overflow-hidden">
+      <Canvas camera={{ position: [0, 0, 8], fov: isMobile ? 78 : 50 }}>
         <Suspense fallback={null}>
-          <ProjectPortalContent projects={projects} onProjectClick={onProjectClick} />
+          <ProjectPortalContent
+            projects={projects}
+            onProjectClick={onProjectClick}
+            positions={positions}
+            cardScale={isMobile ? MOBILE_CARD_SCALE : DESKTOP_CARD_SCALE}
+          />
         </Suspense>
       </Canvas>
     </div>
